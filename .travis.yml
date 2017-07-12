@@ -1,0 +1,13 @@
+language: go
+
+install:
+  - go get github.com/mattn/goveralls
+  - go get gopkg.in/webnice/debug.v1
+
+script:
+  - make test
+  - GOPATH=`pwd` $HOME/gopath/bin/goveralls -coverprofile=coverage.log -service=travis-ci -repotoken $COVERALLS_TOKEN
+
+go:
+  - 1.8
+  - tip
