@@ -7,7 +7,7 @@ PACKETS=$(shell cat .testpackages)
 default: lint test
 
 link:
-	mkdir -p src/gopkg.in/cpy; cd src/gopkg.in/cpy && ln -s ../../.. cpy.v1 2>/dev/null; true
+	mkdir -p src/gopkg.in/webnice; cd src/gopkg.in/webnice && ln -s ../../.. cpy.v1 2>/dev/null; true
 .PHONY: link
 
 ## Generate code by go generate or other utilities
@@ -40,7 +40,7 @@ bench: link
 	GOPATH=${GOPATH} go test -race -bench=. -benchmem ./...
 .PHONY: bench
 
-lint:
+lint: link
 	gometalinter \
 	--vendor \
 	--deadline=15m \
