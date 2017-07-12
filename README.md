@@ -1,7 +1,14 @@
 # cpy
-Copies object to object with filtrations and conversions
 
 [![GoDoc](https://godoc.org/github.com/webnice/cpy?status.png)](http://godoc.org/github.com/webnice/cpy)
+[![Coverage Status](https://coveralls.io/repos/github/webnice/cpy/badge.svg)](https://coveralls.io/github/webnice/cpy)
+[![Build Status](https://travis-ci.org/webnice/cpy.svg?branch=v1)](https://travis-ci.org/webnice/cpy)
+[![CircleCI](https://circleci.com/gh/webnice/cpy/tree/v1.svg?style=svg)](https://circleci.com/gh/webnice/cpy/tree/v1)
+
+Golang library
+
+Copies object to object with filtrations and conversions
+
 
 #### Dependencies
 
