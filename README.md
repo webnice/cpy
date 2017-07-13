@@ -16,5 +16,5 @@ Copies object to object with filtrations and conversions
 
 #### Install
 ```bash
-go get gopkg.in/webnice/cpy.v1
+go get gopkg.in/webnice/cpy.v1/cpy
 ```
