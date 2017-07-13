@@ -14,7 +14,6 @@ func init() {
 
 // Сopy everything
 func (cpy *impl) Copy(toObj interface{}, fromObj interface{}) (err error) {
-	const paramName = `name`
 	var from, to, src, dst reflect.Value
 	var fromT, toT reflect.Type
 	var isSlice bool
@@ -235,7 +234,7 @@ func (cpy *impl) Set(to reflect.Value, from reflect.Value) (ok bool) {
 		if from.Type().ConvertibleTo(to.Type()) {
 			to.Set(from.Convert(to.Type()))
 		} else if scanner, ok = to.Addr().Interface().(sql.Scanner); ok {
-			scanner.Scan(from.Interface())
+			_ = scanner.Scan(from.Interface())
 		} else if from.Kind() == reflect.Ptr {
 			ok = cpy.Set(to, from.Elem())
 		}

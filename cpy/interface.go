@@ -35,7 +35,7 @@ func Omit(toObj interface{}, fromObj interface{}, fields ...string) error {
 	return nil
 }
 
-// FilterAll Копирование с фильтрацией для всех типов списков (slice, array, map),
+// FilterByObject Копирование с фильтрацией для всех типов списков (slice, array, map),
 // на входе функция возвращающая true или false, вызываемая для каждого объекта данных
 // говорящая копировать или пропустить
 func FilterByObject(toObj interface{}, fromObj interface{}, filter FilterFn) error {
