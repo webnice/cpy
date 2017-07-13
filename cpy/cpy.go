@@ -121,7 +121,7 @@ func (cpy *impl) CopyFromMethod(toT reflect.Type, fromT reflect.Type, dst reflec
 // SetToFieldOrMethod Set value to field or method
 func (cpy *impl) SetToFieldOrMethod(dst reflect.Value, dstName string, from reflect.Value, srcName string) (err error) {
 	const paramName = `name`
-	var toF, toM, fromM reflect.Value
+	var toF, toM reflect.Value
 	var field reflect.StructField
 	var values []reflect.Value
 	var name string
@@ -150,20 +150,8 @@ func (cpy *impl) SetToFieldOrMethod(dst reflect.Value, dstName string, from refl
 						cpy.Set(toF, values[0])
 					}
 				} else {
-					if err = cpy.Copy(toF.Addr().Interface(), from.Interface()); err != nil {
-						return
-					}
+					err = cpy.Copy(toF.Addr().Interface(), from.Interface())
 				}
-			}
-		} else {
-			if from.CanAddr() {
-				fromM = from.Addr().MethodByName(srcName)
-			} else {
-				fromM = from.MethodByName(srcName)
-			}
-			values = fromM.Call([]reflect.Value{})
-			if len(values) > 0 {
-				cpy.Set(toF, values[0])
 			}
 		}
 	} else {
