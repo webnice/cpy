@@ -2,6 +2,14 @@ package cpy
 
 //import "gopkg.in/webnice/debug.v1"
 //import "gopkg.in/webnice/log.v2"
+import "time"
+import "strconv"
+
+type Cat string
+
+func (c Cat) String() string {
+	return string(c)
+}
 
 type One struct {
 	ID                  uint64
@@ -10,6 +18,7 @@ type One struct {
 	Place               uint8
 	Blocks              uint
 	Name                string
+	NameInt64           string
 	Descriptions        []byte `cpy:"name=Des"`
 	OnlyPhoto           bool
 	Category            int
@@ -27,6 +36,8 @@ type One struct {
 	Umi                 *string
 	Disable             *bool
 	private             string
+	Time                string
+	Cat                 Cat
 }
 
 func (obj *One) String() string {
@@ -37,7 +48,7 @@ type Two struct {
 	NewID    *uint64 `cpy:"name=ID"`
 	Name     *string
 	Des      []byte
-	Complex  string `cpy:"name=String"`
+	Complex  string `cpy:"name=String;convert=false"`
 	Disabled bool
 }
 
@@ -45,6 +56,40 @@ func (obj *Two) Disable(b *bool) {
 	if b != nil {
 		obj.Disabled = *b
 	}
+}
+
+type Tm struct {
+	Time time.Time
+}
+
+func (tm *Tm) Scan(in interface{}) (err error) {
+	var value string
+	var ok bool
+	if value, ok = in.(string); ok {
+		tm.Time, err = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", value)
+	}
+	return nil
+}
+
+type Int64 int64
+
+func (i64 *Int64) Scan(in interface{}) (err error) {
+	if value, ok := in.(string); ok {
+		var i int64
+		i, err = strconv.ParseInt(value, 10, 64)
+		*i64 = Int64(i)
+	}
+	return
+}
+
+type Converting struct {
+	NewID  int64 `cpy:"name=ID"`
+	Des    string
+	Int64  Int64 `cpy:"name=NameInt64"`
+	Umi    string
+	Time   Tm
+	String string
+	Cat    string
 }
 
 func createOne() (ret *One) {
@@ -57,6 +102,7 @@ func createOne() (ret *One) {
 		Place:         3,
 		Blocks:        4,
 		Name:          "Hello from One.Name",
+		NameInt64:     "-1234567",
 		Descriptions:  []byte("One.Description"),
 		OnlyPhoto:     true,
 		Category:      5,
@@ -69,6 +115,8 @@ func createOne() (ret *One) {
 		Size:          [][]int{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}},
 		Height:        []int16{128, 64},
 		private:       "Private value",
+		Time:          "2017-07-15 02:08:46.691821235 +0000 UTC",
+		Cat:           Cat("myau"),
 	}
 	ret.Marketplace = make([]*string, 2)
 	nort, west = "Nort", "West"

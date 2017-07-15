@@ -8,9 +8,5 @@ const tagName = `cpy`
 
 var singleton = &impl{}
 
-// impl is an implementation of package
-type impl struct {
-}
-
 // FilterFn Функция фильтрации данных
 type FilterFn func(object interface{}) bool

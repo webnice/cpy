@@ -4,12 +4,18 @@ package cpy
 import "gopkg.in/webnice/debug.v1"
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
+	runtimeDebug "runtime/debug"
 	"strings"
 )
 
 func init() {
 	debug.Nop()
+}
+
+// impl is an implementation of package
+type impl struct {
 }
 
 // Сopy everything
@@ -19,19 +25,30 @@ func (cpy *impl) Copy(toObj interface{}, fromObj interface{}) (err error) {
 	var isSlice bool
 	var i, size int
 
+	// Panic recovery
+	defer func() {
+		if e := recover(); e != nil {
+			err = fmt.Errorf("Catch panic: %v\nCall stack is:\n%s", e, string(runtimeDebug.Stack()))
+		}
+	}()
+
 	// Values
 	to, from = cpy.Indirect(reflect.ValueOf(toObj)), cpy.Indirect(reflect.ValueOf(fromObj))
 	if isSlice, size, err = cpy.Check(to, from); err != nil {
 		return
 	}
-
+	// Types
+	toT, fromT = cpy.IndirectType(to.Type()), cpy.IndirectType(from.Type())
+	// Check not equal map
+	if from.Kind() == reflect.Map && to.Kind() == reflect.Map && toT.String() != fromT.String() {
+		err = cpy.ErrTypeMapNotEqual()
+		return
+	}
 	// If possible to assign
 	if from.Type().AssignableTo(to.Type()) {
 		to.Set(from)
 		return
 	}
-	// Types
-	fromT, toT = cpy.IndirectType(from.Type()), cpy.IndirectType(to.Type())
 
 	// The magic :)
 	for i = 0; i < size; i++ {
@@ -46,6 +63,7 @@ func (cpy *impl) Copy(toObj interface{}, fromObj interface{}) (err error) {
 			src = cpy.Indirect(from)
 			dst = cpy.Indirect(to)
 		}
+
 		// Copy from method to field
 		if err = cpy.CopyFromMethod(toT, fromT, dst, src); err != nil {
 			return
@@ -262,8 +280,8 @@ func (cpy *impl) FieldReplaceName(field reflect.StructField, name string) (ret s
 	params = strings.Split(tag, ";")
 	for i = range params {
 		if tmp = strings.Split(params[i], "="); len(tmp) > 1 {
-			if tmp[0] == name {
-				ret = tmp[1]
+			if strings.TrimSpace(tmp[0]) == name {
+				ret = strings.TrimSpace(tmp[1])
 			}
 		}
 	}
