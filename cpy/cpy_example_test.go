@@ -88,13 +88,13 @@ func ExampleFilter_filtration() {
 		Title *string `cpy:"name=FullName" json:"title"` // Overriding the field name to match the field name in the data source structure
 	}
 
-	var source []Src
-	var destination []*Dst
+	var source []*Src
+	var destination []Dst
 
-	source = []Src{
-		Src{ID: 1, FullName: "Aiden Smith", Age: 17},
-		Src{ID: 2, FullName: "Liam Johnson", Age: 19},
-		Src{ID: 3, FullName: "Isabella Brown", Age: 21},
+	source = []*Src{
+		&Src{ID: 1, FullName: "Aiden Smith", Age: 17},
+		&Src{ID: 2, FullName: "Liam Johnson", Age: 19},
+		&Src{ID: 3, FullName: "Isabella Brown", Age: 21},
 	}
 
 	// Сopy everything from one to another
@@ -102,6 +102,9 @@ func ExampleFilter_filtration() {
 		skip = true // By default all rows are skipped
 		// This is filtration function
 		// key is index of value in slice and key in map (In this example is not required)
+
+		// In to the filtering function always comes a copy of the object, regardless of how slice is defined
+		// Therefore, always lead to the type of the slice element (Src), not a (*Src)
 		if v, ok := object.(Src); ok {
 			// filter by age >= 18
 			if v.Age >= 18 {
@@ -126,6 +129,111 @@ func ExampleFilter_filtration() {
 	//   {
 	//     "id": 3,
 	//     "title": "Isabella Brown"
+	//   }
+	// ]
+}
+
+// Copying selected fields of structures
+func ExampleSelect_byField() {
+	// MyType Source and destionation structure
+	type MyType struct {
+		ID          int64   `json:"id"`
+		FullName    string  `json:"name"`
+		Age         int32   `json:"age"`
+		Description string  `json:"des"`
+		Comments    *string `json:"-"`
+	}
+
+	var source []*MyType
+	var destination []MyType
+
+	source = []*MyType{
+		&MyType{ID: 1, FullName: "Aiden Smith", Age: 17, Description: "User Aiden Smith"},
+		&MyType{ID: 2, FullName: "Liam Johnson", Age: 19, Description: "User Liam Johnson"},
+		&MyType{ID: 3, FullName: "Isabella Brown", Age: 21, Description: "User Isabella Brown"},
+	}
+
+	// Сopy only ID and FullName fields
+	err := cpy.Select(&destination, &source, "ID", "FullName")
+	if err != nil {
+		log.Fatalf("Error copy: %s", err.Error())
+	}
+
+	// Output result
+	b, _ := json.MarshalIndent(destination, "", "  ")
+	fmt.Printf("%s\n", string(b))
+
+	// Output:
+	// [
+	//   {
+	//     "id": 1,
+	//     "name": "Aiden Smith",
+	//     "age": 0,
+	//     "des": ""
+	//   },
+	//   {
+	//     "id": 2,
+	//     "name": "Liam Johnson",
+	//     "age": 0,
+	//     "des": ""
+	//   },
+	//   {
+	//     "id": 3,
+	//     "name": "Isabella Brown",
+	//     "age": 0,
+	//     "des": ""
+	//   }
+	// ]
+}
+
+// Copying all fields of structures, but skip listed fields
+func ExampleOmit_byField() {
+	// MyType Source and destionation structure
+	type MyType struct {
+		ID          int64  `json:"id"`
+		FullName    string `json:"name"`
+		Age         int32  `json:"age"`
+		Description string `json:"des"`
+	}
+
+	var source []MyType
+	var destination []*MyType
+
+	source = []MyType{
+		MyType{ID: 1, FullName: "Aiden Smith", Age: 17, Description: "User Aiden Smith"},
+		MyType{ID: 2, FullName: "Liam Johnson", Age: 19, Description: "User Liam Johnson"},
+		MyType{ID: 3, FullName: "Isabella Brown", Age: 21, Description: "User Isabella Brown"},
+	}
+
+	// Skip Description field
+	err := cpy.Omit(&destination, &source, "Description")
+	if err != nil {
+		log.Fatalf("Error copy: %s", err.Error())
+	}
+
+	// Output result
+	b, _ := json.MarshalIndent(destination, "", "  ")
+	fmt.Printf("%s\n", string(b))
+
+	// Output:
+	// [
+	//   {
+	//     "id": 1,
+	//     "name": "Aiden Smith",
+	//     "age": 17,
+	//     "des": ""
+	//   },
+	//   {
+	//     "id": 2,
+	//     "name": "Liam Johnson",
+	//     "age": 19,
+	//     "des": ""
+	//   },
+	//   {
+	//     "id": 3,
+	//     "name": "Isabella Brown",
+	//     "age": 21,
+	//     "des": ""
 	//   }
 	// ]
 }
