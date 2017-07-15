@@ -2,8 +2,11 @@ package cpy
 
 //import "gopkg.in/webnice/debug.v1"
 //import "gopkg.in/webnice/log.v2"
-import "time"
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+	"time"
+)
 
 type Cat string
 
@@ -48,7 +51,7 @@ type Two struct {
 	NewID    *uint64 `cpy:"name=ID"`
 	Name     *string
 	Des      []byte
-	Complex  string `cpy:"name=String;convert=false"`
+	Complex  string `cpy:"name=String;"`
 	Disabled bool
 }
 
@@ -92,6 +95,16 @@ type Converting struct {
 	Cat    string
 }
 
+type Method struct {
+	String func(string) string
+}
+
+type TFilter struct {
+	ID   int64
+	Name string
+	Time time.Time
+}
+
 func createOne() (ret *One) {
 	var nort, west, umi string
 	var disable bool
@@ -129,6 +142,36 @@ func createOne() (ret *One) {
 	ret.Umi = &umi
 	disable = true
 	ret.Disable = &disable
+
+	return
+}
+
+func createSlice() (ret []*TFilter) {
+	var i int64
+	ret = make([]*TFilter, 100)
+
+	for i = 0; i < 100; i++ {
+		ret[i] = &TFilter{
+			ID:   i,
+			Name: fmt.Sprintf("%04d", i),
+			Time: time.Now().In(time.Local),
+		}
+	}
+
+	return
+}
+
+func createMap() (ret map[int64]*TFilter) {
+	var i int64
+	ret = make(map[int64]*TFilter)
+
+	for i = 0; i < 100; i++ {
+		ret[i] = &TFilter{
+			ID:   i,
+			Name: fmt.Sprintf("%04d", i),
+			Time: time.Now().In(time.Local),
+		}
+	}
 
 	return
 }

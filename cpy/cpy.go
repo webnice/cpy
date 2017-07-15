@@ -1,7 +1,7 @@
 package cpy
 
+//import "gopkg.in/webnice/debug.v1"
 //import "gopkg.in/webnice/log.v2"
-import "gopkg.in/webnice/debug.v1"
 import (
 	"database/sql"
 	"fmt"
@@ -10,17 +10,13 @@ import (
 	"strings"
 )
 
-func init() {
-	debug.Nop()
-}
-
 // impl is an implementation of package
 type impl struct {
 }
 
 // Сopy everything
-func (cpy *impl) Copy(toObj interface{}, fromObj interface{}) (err error) {
-	var from, to, src, dst reflect.Value
+func (cpy *impl) Copy(toObj interface{}, fromObj interface{}, selected []string, omit []string, filter FilterFn) (err error) {
+	var from, to, src, dst, key reflect.Value
 	var fromT, toT reflect.Type
 	var isSlice bool
 	var i, size int
@@ -44,19 +40,35 @@ func (cpy *impl) Copy(toObj interface{}, fromObj interface{}) (err error) {
 		err = cpy.ErrTypeMapNotEqual()
 		return
 	}
-	// If possible to assign
-	if from.Type().AssignableTo(to.Type()) {
+
+	// If possible to assign, but not use filtration
+	if from.Type().AssignableTo(to.Type()) && filter != nil && from.Kind() == reflect.Map {
+		// Copy map to map with filtration
+		to.Set(reflect.MakeMap(toT))
+		for _, key = range from.MapKeys() {
+			if filter(cpy.Indirect(key), cpy.Indirect(from.MapIndex(key)).Interface()) {
+				continue
+			}
+			to.SetMapIndex(key, from.MapIndex(key))
+		}
+		return
+	} else if from.Type().AssignableTo(to.Type()) && filter == nil {
 		to.Set(from)
 		return
 	}
 
-	// The magic :)
-	for i = 0; i < size; i++ {
+	for i = 0; i < size && err == nil; i++ {
 		if isSlice {
 			if from.Kind() == reflect.Slice {
 				src = cpy.Indirect(from.Index(i))
 			} else {
 				src = cpy.Indirect(from)
+			}
+			// filtration
+			if filter != nil {
+				if filter(i, src.Interface()) {
+					continue
+				}
 			}
 			dst = cpy.Indirect(reflect.New(toT).Elem())
 		} else {
@@ -65,12 +77,10 @@ func (cpy *impl) Copy(toObj interface{}, fromObj interface{}) (err error) {
 		}
 
 		// Copy from method to field
-		if err = cpy.CopyFromMethod(toT, fromT, dst, src); err != nil {
-			return
-		}
+		err = cpy.CopyFromMethod(toT, fromT, dst, src, selected, omit, filter)
 		// Copy from field to field or method
-		if err = cpy.CopyFromField(toT, fromT, dst, src); err != nil {
-			return
+		if err == nil {
+			err = cpy.CopyFromField(toT, fromT, dst, src, selected, omit, filter)
 		}
 		if isSlice {
 			switch {
@@ -85,8 +95,42 @@ func (cpy *impl) Copy(toObj interface{}, fromObj interface{}) (err error) {
 	return
 }
 
+// IsSkip Return true for skip field
+func (cpy *impl) IsSkip(selected []string, omit []string, srcName string, dstName string) (ret bool) {
+	var i int
+
+	// Only selected fields
+	if len(selected) > 0 {
+		ret = true
+		for i = range selected {
+			if selected[i] == srcName || selected[i] == dstName {
+				ret = false
+			}
+		}
+	}
+	// All fields except selected
+	if len(omit) > 0 {
+		ret = false
+		for i = range omit {
+			if omit[i] == srcName || omit[i] == dstName {
+				ret = true
+			}
+		}
+	}
+
+	return
+}
+
 // CopyFromField Copy from field to field or method
-func (cpy *impl) CopyFromField(toT reflect.Type, fromT reflect.Type, dst reflect.Value, src reflect.Value) (err error) {
+func (cpy *impl) CopyFromField(
+	toT reflect.Type,
+	fromT reflect.Type,
+	dst reflect.Value,
+	src reflect.Value,
+	selected []string,
+	omit []string,
+	filter FilterFn,
+) (err error) {
 	const paramName = `name`
 	var fromF reflect.Value
 	var field reflect.StructField
@@ -98,11 +142,13 @@ func (cpy *impl) CopyFromField(toT reflect.Type, fromT reflect.Type, dst reflect
 		if dstName = cpy.FieldReplaceName(field, paramName); dstName == "" {
 			dstName = srcName
 		}
+		if cpy.IsSkip(selected, omit, srcName, dstName) {
+			continue
+		}
+
 		fromF = src.FieldByName(srcName)
 		if fromF.IsValid() {
-			if err = cpy.SetToFieldOrMethod(dst, dstName, fromF, srcName); err != nil {
-				return
-			}
+			err = cpy.SetToFieldOrMethod(dst, dstName, fromF, srcName, selected, omit, filter)
 		}
 	}
 
@@ -110,7 +156,15 @@ func (cpy *impl) CopyFromField(toT reflect.Type, fromT reflect.Type, dst reflect
 }
 
 // Copy from method to field
-func (cpy *impl) CopyFromMethod(toT reflect.Type, fromT reflect.Type, dst reflect.Value, src reflect.Value) (err error) {
+func (cpy *impl) CopyFromMethod(
+	toT reflect.Type,
+	fromT reflect.Type,
+	dst reflect.Value,
+	src reflect.Value,
+	selected []string,
+	omit []string,
+	filter FilterFn,
+) (err error) {
 	const paramName = `name`
 	var fromM reflect.Value
 	var field reflect.StructField
@@ -121,15 +175,16 @@ func (cpy *impl) CopyFromMethod(toT reflect.Type, fromT reflect.Type, dst reflec
 		if srcName = cpy.FieldReplaceName(field, paramName); srcName == "" {
 			srcName = dstName
 		}
-		if src.CanAddr() {
+		if cpy.IsSkip(selected, omit, srcName, dstName) {
+			continue
+		}
+
+		fromM = src.MethodByName(srcName)
+		if !fromM.IsValid() && src.CanAddr() {
 			fromM = src.Addr().MethodByName(srcName)
-		} else {
-			fromM = src.MethodByName(srcName)
 		}
 		if fromM.IsValid() {
-			if err = cpy.SetToFieldOrMethod(dst, dstName, fromM, srcName); err != nil {
-				return
-			}
+			err = cpy.SetToFieldOrMethod(dst, dstName, fromM, srcName, selected, omit, filter)
 		}
 	}
 
@@ -137,7 +192,15 @@ func (cpy *impl) CopyFromMethod(toT reflect.Type, fromT reflect.Type, dst reflec
 }
 
 // SetToFieldOrMethod Set value to field or method
-func (cpy *impl) SetToFieldOrMethod(dst reflect.Value, dstName string, from reflect.Value, srcName string) (err error) {
+func (cpy *impl) SetToFieldOrMethod(
+	dst reflect.Value,
+	dstName string,
+	from reflect.Value,
+	srcName string,
+	selected []string,
+	omit []string,
+	filter FilterFn,
+) (err error) {
 	const paramName = `name`
 	var toF, toM reflect.Value
 	var field reflect.StructField
@@ -168,16 +231,15 @@ func (cpy *impl) SetToFieldOrMethod(dst reflect.Value, dstName string, from refl
 						cpy.Set(toF, values[0])
 					}
 				} else {
-					err = cpy.Copy(toF.Addr().Interface(), from.Interface())
+					err = cpy.Copy(toF.Addr().Interface(), from.Interface(), selected, omit, filter)
 				}
 			}
 		}
 	} else {
 		// Try to set call method
-		if dst.CanAddr() {
+		toM = dst.MethodByName(dstName)
+		if !toM.IsValid() && dst.CanAddr() {
 			toM = dst.Addr().MethodByName(dstName)
-		} else {
-			toM = dst.MethodByName(dstName)
 		}
 		if toM.IsValid() &&
 			toM.Type().NumIn() == 1 &&

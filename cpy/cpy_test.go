@@ -1,15 +1,12 @@
 package cpy
 
-//import "gopkg.in/webnice/log.v2"
 //import "gopkg.in/webnice/debug.v1"
+//import "gopkg.in/webnice/log.v2"
 import (
+	"bytes"
 	"testing"
 	"time"
 )
-
-//func init() {
-//	debug.Nop()
-//}
 
 func TestAllEmbedded(t *testing.T) {
 	var err error
@@ -94,20 +91,20 @@ func TestAllConverting(t *testing.T) {
 	dst = new(Converting)
 	err = All(dst, src)
 	if err != nil {
-		t.Fatalf("Copy All failed: %s", err.Error())
+		t.Fatalf("Copy All() failed: %s", err.Error())
 	}
 	if dst.NewID != 1 {
-		t.Fatal("Copy All failed")
+		t.Fatal("Copy All() failed")
 	}
 	if dst.Int64 != -1234567 {
-		t.Fatal("Copy All failed")
+		t.Fatal("Copy All() failed")
 	}
 	if dst.Cat != "myau" {
-		t.Fatal("Copy All failed")
+		t.Fatal("Copy All() failed")
 	}
 	tm, _ = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", "2017-07-15 02:08:46.691821235 +0000 UTC")
 	if !dst.Time.Time.Equal(tm) {
-		t.Fatal("Copy All failed")
+		t.Fatal("Copy All() failed")
 	}
 }
 
@@ -128,7 +125,7 @@ func TestAllSlice(t *testing.T) {
 		t.Fatalf("Copy slice failed: %s", err.Error())
 	}
 	if len(dst1) != len(src1) || len(dst2) != len(src2) {
-		t.Fatal("Copy All failed")
+		t.Fatal("Copy All() failed")
 	}
 }
 
@@ -142,7 +139,7 @@ func TestAllStructToSlice(t *testing.T) {
 		t.Fatalf("Copy slice failed: %s", err.Error())
 	}
 	if len(dst) != 1 {
-		t.Fatal("Copy All failed")
+		t.Fatal("Copy All() failed")
 	}
 }
 
@@ -155,8 +152,131 @@ func TestAll(t *testing.T) {
 	dst = new(Two)
 	err = All(dst, src)
 	if err != nil {
-		t.Fatalf("Copy All failed: %s", err.Error())
+		t.Fatalf("Copy All() failed: %s", err.Error())
+	}
+	if *dst.NewID != 1 {
+		t.Fatal("Copy All() failed")
+	}
+	if *dst.Name != "Hello from One.Name" {
+		t.Fatal("Copy All() failed")
+	}
+	if !bytes.Equal(dst.Des, []byte("One.Description")) {
+		t.Fatal("Copy All() failed")
+	}
+	if dst.Complex != "One.Description, name: Hello from One.Name" {
+		t.Fatal("Copy All() failed")
+	}
+	if !dst.Disabled {
+		t.Fatal("Copy All() failed")
+	}
+}
+
+func TestSelect(t *testing.T) {
+	var err error
+	var src *One
+	var dst *Two
+
+	src = createOne()
+	dst = new(Two)
+	err = Select(dst, src, "ID", "Des")
+	if err != nil {
+		t.Fatalf("Copy Select() failed: %s", err.Error())
+	}
+	if *dst.NewID != 1 {
+		t.Fatal("Copy Select() failed")
+	}
+	if !bytes.Equal(dst.Des, []byte("One.Description")) {
+		t.Fatal("Copy Select() failed")
 	}
 
-	//debug.Dumper(src, dst)
+	if dst.Name != nil {
+		t.Fatal("Copy Select() failed")
+	}
+	if dst.Complex == "One.Description, name: Hello from One.Name" {
+		t.Fatal("Copy Select() failed")
+	}
+	if dst.Disabled {
+		t.Fatal("Copy Select() failed")
+	}
+}
+
+func TestOmit(t *testing.T) {
+	var err error
+	var src *One
+	var dst *Two
+
+	src = createOne()
+	dst = new(Two)
+	err = Omit(dst, src, "ID")
+	if err != nil {
+		t.Fatalf("Copy Omit() failed: %s", err.Error())
+	}
+	if *dst.Name != "Hello from One.Name" {
+		t.Fatal("Copy Omit() failed")
+	}
+	if !bytes.Equal(dst.Des, []byte("One.Description")) {
+		t.Fatal("Copy Omit() failed")
+	}
+	if dst.Complex != "One.Description, name: Hello from One.Name" {
+		t.Fatal("Copy Omit() failed")
+	}
+	if !dst.Disabled {
+		t.Fatal("Copy Omit() failed")
+	}
+
+	if dst.NewID != nil {
+		t.Fatal("Copy Omit() failed")
+	}
+}
+
+func TestFilterSlice(t *testing.T) {
+	var err error
+	var src []*TFilter
+	var dst []*TFilter
+	var sum int64
+
+	src = createSlice()
+	err = Filter(&dst, &src, func(key interface{}, object interface{}) (skip bool) {
+		if v, ok := object.(TFilter); ok {
+			if v.ID >= 10 {
+				skip = true
+			}
+		}
+		return
+	})
+	if err != nil {
+		t.Fatalf("Copy Filter() failed: %s", err.Error())
+	}
+	for _, o := range dst {
+		sum += o.ID
+	}
+	if sum != 45 {
+		t.Fatalf("Copy Filter() failed. Sum is %d", sum)
+	}
+}
+
+func TestFilterMap(t *testing.T) {
+	var err error
+	var src map[int64]*TFilter
+	var dst map[int64]*TFilter
+	var sum int64
+
+	src = createMap()
+	err = Filter(&dst, &src, func(key interface{}, object interface{}) (skip bool) {
+		if v, ok := object.(TFilter); ok {
+			if v.ID >= 10 {
+				skip = true
+			}
+		}
+		return
+	})
+	if err != nil {
+		t.Fatalf("Copy Filter() failed: %s", err.Error())
+	}
+	for o := range dst {
+		sum += o
+	}
+	if sum != 45 {
+		t.Fatal("Copy Filter() failed")
+	}
 }
