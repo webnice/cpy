@@ -11,7 +11,7 @@ import (
 	"gopkg.in/webnice/cpy.v1/cpy"
 )
 
-// ExampleAll_everything Сopy everything from one to another
+// Copying all data without filtration with type conversion and field matching.
 func ExampleAll_everything() {
 	// Src Source structure
 	type Src struct {
