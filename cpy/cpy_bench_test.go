@@ -19,7 +19,7 @@ func BenchmarkCopyStruct(b *testing.B) {
 	var years int32 = 21
 	user := Profile{Name: "Copier lib", Nickname: "Copier lib", Age: 21, Years: &years, Role: "Admin", flags: []byte{'x', 'y', 'z'}}
 	for x := 0; x < b.N; x++ {
-		All(&Profile{}, &user)
+		_ = All(&Profile{}, &user)
 	}
 }
 

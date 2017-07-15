@@ -18,7 +18,7 @@ generate: link
 
 ## Dependence managers
 dep: link
-	GOPATH=${GOPATH} glide install
+	# if command -v "gvt"; then GOPATH="$(DIR)" gvt update -all; fi
 .PHONY: dep
 
 test: link
@@ -44,7 +44,7 @@ lint: link
 	gometalinter \
 	--vendor \
 	--deadline=15m \
-	--cyclo-over=20 \
+	--cyclo-over=30 \
 	--disable=aligncheck \
 	--disable=gotype \
 	--disable=structcheck \

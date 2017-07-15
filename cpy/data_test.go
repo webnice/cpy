@@ -69,7 +69,7 @@ func (tm *Tm) Scan(in interface{}) (err error) {
 	var value string
 	var ok bool
 	if value, ok = in.(string); ok {
-		tm.Time, err = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", value)
+		tm.Time, _ = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", value)
 	}
 	return nil
 }
@@ -93,10 +93,6 @@ type Converting struct {
 	Time   Tm
 	String string
 	Cat    string
-}
-
-type Method struct {
-	String func(string) string
 }
 
 type TFilter struct {
