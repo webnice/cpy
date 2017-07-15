@@ -11,8 +11,8 @@ import (
 	"gopkg.in/webnice/cpy.v1/cpy"
 )
 
-// ExampleAll_Everything_With_Converting Сopy everything from one to another
-func ExampleAll_Everything_With_Converting() {
+// ExampleAll_everything_with_converting Сopy everything from one to another
+func ExampleAll_everything_with_converting() {
 	// Src Source structure
 	type Src struct {
 		ID       int64
