@@ -13,13 +13,13 @@ func All(toObj interface{}, fromObj interface{}) error {
 	return singleton.Copy(toObj, fromObj)
 }
 
-// Include Copy only the listed fields
+// Only Copy only the listed fields
 // Копирование полей структур со сравнением по именам полей, не совпадающие и не перечисленные пропускаются
 // Копирование полей с преобразованием pointer -> не pointer (в оба направления)
 // Копирование поля в метод и метод в поле при совпадении имён метода и поля (в оба направления),
 //  исходный метод должен быть без параметров, результирующи метод должен быть с одним входящим парметром
 // Копирование полей с заменой имени поля, описывается в tag структуры
-func Include(toObj interface{}, fromObj interface{}, fields ...string) error {
+func Selected(toObj interface{}, fromObj interface{}, fields ...string) error {
 	//return singleton.Copy(toObj, fromObj)
 	return nil
 }
@@ -48,3 +48,6 @@ func ErrCopyToObjectUnaddressable() error { return singleton.ErrCopyToObjectUnad
 
 // ErrCopyFromObjectInvalid Error: Copy from object is invalid
 func ErrCopyFromObjectInvalid() error { return singleton.ErrCopyFromObjectInvalid() }
+
+// ErrTypeMapNotEqual Error: Type of map is not equal
+func ErrTypeMapNotEqual() error { return singleton.ErrTypeMapNotEqual() }

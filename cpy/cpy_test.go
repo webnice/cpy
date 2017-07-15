@@ -1,15 +1,15 @@
 package cpy
 
 //import "gopkg.in/webnice/log.v2"
-import "gopkg.in/webnice/debug.v1"
+//import "gopkg.in/webnice/debug.v1"
 import (
 	"testing"
 	"time"
 )
 
-func init() {
-	debug.Nop()
-}
+//func init() {
+//	debug.Nop()
+//}
 
 func TestAllEmbedded(t *testing.T) {
 	var err error

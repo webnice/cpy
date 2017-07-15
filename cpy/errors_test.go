@@ -1,7 +1,7 @@
 package cpy
 
+//import "gopkg.in/webnice/debug.v1"
 //import "gopkg.in/webnice/log.v2"
-import "gopkg.in/webnice/debug.v1"
 import (
 	"testing"
 )
@@ -40,10 +40,11 @@ func TestErrTypeMapNotEqual(t *testing.T) {
 	m1 = make(map[int64]mt)
 	m1[-1] = mt{T: "Minus one"}
 	m1[100] = mt{I: 101, T: "One hundred"}
-	if err = All(&m2, &m1); err == nil {
-
-		debug.Dumper(err, m1, m2)
-
+	err = All(&m2, &m1)
+	if err == nil {
 		t.Fatal("Copy map to map failed")
+	}
+	if err != ErrTypeMapNotEqual() {
+		t.Fatalf("Incorrect error from copy map to map")
 	}
 }
