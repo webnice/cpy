@@ -103,7 +103,7 @@ func ExampleFilter_filtration() {
 		// This is filtration function
 		// key is index of value in slice and key in map (In this example is not required)
 
-		// In to the filtering function always comes a copy of the object, regardless of how slice is defined
+		// Filtering function always receives a copy of the object, regardless of how slice is defined
 		// Therefore, always lead to the type of the slice element (Src), not a (*Src)
 		if v, ok := object.(Src); ok {
 			// filter by age >= 18
