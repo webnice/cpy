@@ -1,7 +1,5 @@
+// Package cpy
 package cpy
-
-//import "gopkg.in/webnice/debug.v1"
-//import "gopkg.in/webnice/log.v2"
 
 const tagName = `cpy`
 

@@ -1,10 +1,7 @@
+// Package cpy
 package cpy
 
-//import "gopkg.in/webnice/debug.v1"
-//import "gopkg.in/webnice/log.v2"
-import (
-	"testing"
-)
+import "testing"
 
 func TestErrCopyToObjectUnaddressable(t *testing.T) {
 	var err error
@@ -18,8 +15,10 @@ func TestErrCopyToObjectUnaddressable(t *testing.T) {
 }
 
 func TestErrCopyFromObjectInvalid(t *testing.T) {
-	var err error
-	var src *One
+	var (
+		err error
+		src *One
+	)
 
 	dst := Two{}
 	err = All(&dst, src)
@@ -29,13 +28,15 @@ func TestErrCopyFromObjectInvalid(t *testing.T) {
 }
 
 func TestErrTypeMapNotEqual(t *testing.T) {
-	var err error
 	type mt struct {
 		I int64
 		T string
 	}
-	var m1 map[int64]mt
-	var m2 map[int64]*mt
+	var (
+		err error
+		m1  map[int64]mt
+		m2  map[int64]*mt
+	)
 
 	m1 = make(map[int64]mt)
 	m1[-1] = mt{T: "Minus one"}

@@ -1,7 +1,6 @@
+// Package cpy
 package cpy
 
-//import "gopkg.in/webnice/debug.v1"
-//import "gopkg.in/webnice/log.v2"
 import (
 	"database/sql"
 	"fmt"
@@ -11,15 +10,16 @@ import (
 )
 
 // impl is an implementation of package
-type impl struct {
-}
+type impl struct{}
 
-// Сopy everything
+// Copy everything
 func (cpy *impl) Copy(toObj interface{}, fromObj interface{}, selected []string, omit []string, filter FilterFn) (err error) {
-	var from, to, src, dst, key reflect.Value
-	var fromT, toT reflect.Type
-	var isSlice bool
-	var i, size int
+	var (
+		from, to, src, dst, key reflect.Value
+		fromT, toT              reflect.Type
+		isSlice                 bool
+		i, size                 int
+	)
 
 	// Panic recovery
 	defer func() {
@@ -27,7 +27,6 @@ func (cpy *impl) Copy(toObj interface{}, fromObj interface{}, selected []string,
 			err = fmt.Errorf("Catch panic: %v\nCall stack is:\n%s", e, string(runtimeDebug.Stack()))
 		}
 	}()
-
 	// Values
 	to, from = cpy.Indirect(reflect.ValueOf(toObj)), cpy.Indirect(reflect.ValueOf(fromObj))
 	if isSlice, size, err = cpy.Check(to, from); err != nil {
@@ -40,7 +39,6 @@ func (cpy *impl) Copy(toObj interface{}, fromObj interface{}, selected []string,
 		err = cpy.ErrTypeMapNotEqual()
 		return
 	}
-
 	// If possible to assign, but not use filtration
 	if from.Type().AssignableTo(to.Type()) && filter != nil && from.Kind() == reflect.Map {
 		// Copy map to map with filtration
@@ -56,7 +54,6 @@ func (cpy *impl) Copy(toObj interface{}, fromObj interface{}, selected []string,
 		to.Set(from)
 		return
 	}
-
 	for i = 0; i < size && err == nil; i++ {
 		if isSlice {
 			if from.Kind() == reflect.Slice {
@@ -75,7 +72,6 @@ func (cpy *impl) Copy(toObj interface{}, fromObj interface{}, selected []string,
 			src = cpy.Indirect(from)
 			dst = cpy.Indirect(to)
 		}
-
 		// Copy from method to field
 		err = cpy.CopyFromMethod(toT, fromT, dst, src, selected, omit, filter)
 		// Copy from field to field or method
@@ -123,7 +119,7 @@ func (cpy *impl) IsSkip(selected []string, omit []string, srcName string, dstNam
 
 // CopyFromField Copy from field to field or method
 func (cpy *impl) CopyFromField(
-	toT reflect.Type,
+	_ reflect.Type,
 	fromT reflect.Type,
 	dst reflect.Value,
 	src reflect.Value,
@@ -132,9 +128,11 @@ func (cpy *impl) CopyFromField(
 	filter FilterFn,
 ) (err error) {
 	const paramName = `name`
-	var fromF reflect.Value
-	var field reflect.StructField
-	var srcName, dstName string
+	var (
+		fromF            reflect.Value
+		field            reflect.StructField
+		srcName, dstName string
+	)
 
 	// Copy from field or method to field
 	for _, field = range cpy.Fields(fromT) {
@@ -145,7 +143,6 @@ func (cpy *impl) CopyFromField(
 		if cpy.IsSkip(selected, omit, srcName, dstName) {
 			continue
 		}
-
 		fromF = src.FieldByName(srcName)
 		if fromF.IsValid() {
 			err = cpy.SetToFieldOrMethod(dst, dstName, fromF, srcName, selected, omit, filter)
@@ -155,10 +152,10 @@ func (cpy *impl) CopyFromField(
 	return
 }
 
-// Copy from method to field
+// CopyFromMethod Copy from method to field
 func (cpy *impl) CopyFromMethod(
 	toT reflect.Type,
-	fromT reflect.Type,
+	_ reflect.Type,
 	dst reflect.Value,
 	src reflect.Value,
 	selected []string,
@@ -166,9 +163,11 @@ func (cpy *impl) CopyFromMethod(
 	filter FilterFn,
 ) (err error) {
 	const paramName = `name`
-	var fromM reflect.Value
-	var field reflect.StructField
-	var srcName, dstName string
+	var (
+		fromM            reflect.Value
+		field            reflect.StructField
+		srcName, dstName string
+	)
 
 	for _, field = range cpy.Fields(toT) {
 		dstName = field.Name
@@ -178,7 +177,6 @@ func (cpy *impl) CopyFromMethod(
 		if cpy.IsSkip(selected, omit, srcName, dstName) {
 			continue
 		}
-
 		fromM = src.MethodByName(srcName)
 		if !fromM.IsValid() && src.CanAddr() {
 			fromM = src.Addr().MethodByName(srcName)
@@ -196,20 +194,22 @@ func (cpy *impl) SetToFieldOrMethod(
 	dst reflect.Value,
 	dstName string,
 	from reflect.Value,
-	srcName string,
+	_ string,
 	selected []string,
 	omit []string,
 	filter FilterFn,
 ) (err error) {
 	const paramName = `name`
-	var toF, toM reflect.Value
-	var field reflect.StructField
-	var values []reflect.Value
-	var name string
+	var (
+		toF, toM reflect.Value
+		field    reflect.StructField
+		values   []reflect.Value
+		name     string
+	)
 
-	// Запрос по имени поля
+	// By field name
 	toF = dst.FieldByName(dstName)
-	// Поиск по тегу
+	// Search by tag name
 	if !toF.IsValid() {
 		for _, field = range cpy.Fields(dst.Type()) {
 			if name = field.Name; cpy.FieldReplaceName(field, paramName) == dstName {
@@ -218,7 +218,6 @@ func (cpy *impl) SetToFieldOrMethod(
 			}
 		}
 	}
-
 	// Если field
 	if toF.IsValid() {
 		// Try to can set
@@ -256,18 +255,20 @@ func (cpy *impl) Indirect(rv reflect.Value) reflect.Value {
 	for rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
+
 	return rv
 }
 
-// Indirect type get
+// IndirectType Indirect type get
 func (cpy *impl) IndirectType(reflectType reflect.Type) reflect.Type {
 	for reflectType.Kind() == reflect.Ptr || reflectType.Kind() == reflect.Slice {
 		reflectType = reflectType.Elem()
 	}
+
 	return reflectType
 }
 
-// Checks if input objects is correct
+// Check if input objects is correct
 func (cpy *impl) Check(to reflect.Value, from reflect.Value) (isSlice bool, size int, err error) {
 	if !from.IsValid() {
 		err = cpy.ErrCopyFromObjectInvalid()
@@ -285,6 +286,7 @@ func (cpy *impl) Check(to reflect.Value, from reflect.Value) (isSlice bool, size
 			size = from.Len()
 		}
 	}
+
 	return
 }
 
@@ -313,8 +315,10 @@ func (cpy *impl) Set(to reflect.Value, from reflect.Value) (ok bool) {
 
 // Fields to StructField
 func (cpy *impl) Fields(rt reflect.Type) (ret []reflect.StructField) {
-	var i int
-	var v reflect.StructField
+	var (
+		i int
+		v reflect.StructField
+	)
 
 	if rt = cpy.IndirectType(rt); rt.Kind() == reflect.Struct {
 		for i = 0; i < rt.NumField(); i++ {
@@ -332,9 +336,11 @@ func (cpy *impl) Fields(rt reflect.Type) (ret []reflect.StructField) {
 
 // FieldReplaceName Get field name from tag
 func (cpy *impl) FieldReplaceName(field reflect.StructField, name string) (ret string) {
-	var tag string
-	var params, tmp []string
-	var i int
+	var (
+		tag         string
+		params, tmp []string
+		i           int
+	)
 
 	if tag = field.Tag.Get(tagName); tag == "" {
 		return

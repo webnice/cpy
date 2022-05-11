@@ -1,10 +1,7 @@
+// Package cpy
 package cpy
 
-//import "gopkg.in/webnice/debug.v1"
-//import "gopkg.in/webnice/log.v2"
-import (
-	"testing"
-)
+import "testing"
 
 type Profile struct {
 	Name     string
@@ -16,21 +13,33 @@ type Profile struct {
 }
 
 func BenchmarkCopyStruct(b *testing.B) {
-	var years int32 = 21
-	user := Profile{Name: "Copier lib", Nickname: "Copier lib", Age: 21, Years: &years, Role: "Admin", flags: []byte{'x', 'y', 'z'}}
-	for x := 0; x < b.N; x++ {
+	var (
+		years int32
+		user  Profile
+		n     int
+	)
+
+	years = 21
+	user = Profile{Name: "Copier lib", Nickname: "Copier lib", Age: 21, Years: &years, Role: "Admin", flags: []byte{'x', 'y', 'z'}}
+	for n = 0; n < b.N; n++ {
 		_ = All(&Profile{}, &user)
 	}
 }
 
 func BenchmarkNamaCopy(b *testing.B) {
-	var years int32 = 21
-	user := Profile{Name: "Copier lib", Nickname: "Copier lib", Age: 21, Years: &years, Role: "Admin", flags: []byte{'x', 'y', 'z'}}
-	for x := 0; x < b.N; x++ {
+	var (
+		years int32
+		user  Profile
+		n     int
+	)
+
+	years = 21
+	user = Profile{Name: "Copier lib", Nickname: "Copier lib", Age: 21, Years: &years, Role: "Admin", flags: []byte{'x', 'y', 'z'}}
+	for n = 0; n < b.N; n++ {
 		test := &Profile{
 			Name:     user.Name,
 			Nickname: user.Nickname,
-			Age:      int32(user.Age),
+			Age:      user.Age,
 			Years:    user.Years,
 		}
 		_ = test

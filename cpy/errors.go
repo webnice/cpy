@@ -1,13 +1,12 @@
+// Package cpy
 package cpy
 
-//import "gopkg.in/webnice/debug.v1"
-//import "gopkg.in/webnice/log.v2"
 import "fmt"
 
 var (
-	errCopyToObjectUnaddressable = fmt.Errorf("Copy to object is unaddressable")
-	errCopyFromObjectInvalid     = fmt.Errorf("Copy from object is invalid")
-	errTypeMapNotEqual           = fmt.Errorf("Type of map is not equal")
+	errCopyToObjectUnaddressable = fmt.Errorf("copy to object is unaddressable")
+	errCopyFromObjectInvalid     = fmt.Errorf("copy from object is invalid")
+	errTypeMapNotEqual           = fmt.Errorf("type of map is not equal")
 )
 
 // ErrCopyToObjectUnaddressable Error: Copy to object is unaddressable

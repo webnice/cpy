@@ -1,7 +1,6 @@
+// Package cpy
 package cpy
 
-//import "gopkg.in/webnice/debug.v1"
-//import "gopkg.in/webnice/log.v2"
 import (
 	"fmt"
 	"strconv"
@@ -66,22 +65,32 @@ type Tm struct {
 }
 
 func (tm *Tm) Scan(in interface{}) (err error) {
-	var value string
-	var ok bool
+	var (
+		value string
+		ok    bool
+	)
+
 	if value, ok = in.(string); ok {
 		tm.Time, _ = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", value)
 	}
+
 	return nil
 }
 
 type Int64 int64
 
 func (i64 *Int64) Scan(in interface{}) (err error) {
-	if value, ok := in.(string); ok {
-		var i int64
+	var (
+		value string
+		ok    bool
+		i     int64
+	)
+
+	if value, ok = in.(string); ok {
 		i, err = strconv.ParseInt(value, 10, 64)
 		*i64 = Int64(i)
 	}
+
 	return
 }
 
@@ -102,8 +111,10 @@ type TFilter struct {
 }
 
 func createOne() (ret *One) {
-	var nort, west, umi string
-	var disable bool
+	var (
+		nort, west, umi string
+		disable         bool
+	)
 
 	ret = &One{
 		ID:            1,
@@ -125,7 +136,7 @@ func createOne() (ret *One) {
 		Height:        []int16{128, 64},
 		private:       "Private value",
 		Time:          "2017-07-15 02:08:46.691821235 +0000 UTC",
-		Cat:           Cat("myau"),
+		Cat:           "my-au",
 	}
 	ret.Marketplace = make([]*string, 2)
 	nort, west = "Nort", "West"
@@ -143,13 +154,13 @@ func createOne() (ret *One) {
 }
 
 func createSlice() (ret []*TFilter) {
-	var i int64
-	ret = make([]*TFilter, 100)
+	var n int64
 
-	for i = 0; i < 100; i++ {
-		ret[i] = &TFilter{
-			ID:   i,
-			Name: fmt.Sprintf("%04d", i),
+	ret = make([]*TFilter, 100)
+	for n = 0; n < 100; n++ {
+		ret[n] = &TFilter{
+			ID:   n,
+			Name: fmt.Sprintf("%04d", n),
 			Time: time.Now().In(time.Local),
 		}
 	}
@@ -158,13 +169,13 @@ func createSlice() (ret []*TFilter) {
 }
 
 func createMap() (ret map[int64]*TFilter) {
-	var i int64
-	ret = make(map[int64]*TFilter)
+	var n int64
 
-	for i = 0; i < 100; i++ {
-		ret[i] = &TFilter{
-			ID:   i,
-			Name: fmt.Sprintf("%04d", i),
+	ret = make(map[int64]*TFilter)
+	for n = 0; n < 100; n++ {
+		ret[n] = &TFilter{
+			ID:   n,
+			Name: fmt.Sprintf("%04d", n),
 			Time: time.Now().In(time.Local),
 		}
 	}

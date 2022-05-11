@@ -1,9 +1,7 @@
+// Package cpy
 package cpy
 
-//import "gopkg.in/webnice/debug.v1"
-//import "gopkg.in/webnice/log.v2"
-
-// All Сopy everything from one to another
+// All Copy everything from one to another
 func All(toObj interface{}, fromObj interface{}) error {
 	return singleton.Copy(toObj, fromObj, nil, nil, nil)
 }
@@ -14,13 +12,13 @@ func Select(toObj interface{}, fromObj interface{}, fields ...string) error {
 	return singleton.Copy(toObj, fromObj, fields, nil, nil)
 }
 
-// Omit Сopy everything from one to another, but skip listed fields.
+// Omit Copy everything from one to another, but skip listed fields.
 // Use for struct only
 func Omit(toObj interface{}, fromObj interface{}, fields ...string) error {
 	return singleton.Copy(toObj, fromObj, nil, fields, nil)
 }
 
-// Filter Сopy everything data which filtration, used for array, slice and map
+// Filter Copy everything data which filtration, used for array, slice and map
 func Filter(toObj interface{}, fromObj interface{}, filter FilterFn) error {
 	return singleton.Copy(toObj, fromObj, nil, nil, filter)
 }
